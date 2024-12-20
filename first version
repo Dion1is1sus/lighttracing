@@ -1,0 +1,86 @@
+using System;
+using System.Collections.Generic;
+using System.Numerics;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.Serialization.Formatters;
+
+class Program
+{
+    public struct Point
+    {
+        public float x, y, z;
+        public Point(int x, int y, int z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+    }
+    static void Main()
+    {
+        Console.CursorVisible = false;
+        List<Point> points = new List<Point>();
+        List<char> chars = new List<char> { '@', '$', '8', 'W', '9', 'H', '4', 'Z', '1', '(', '/', '!', ':', '.' };
+        Point start = new Point(60, 15, 0);
+        for (int i = 0; i < 30; i++)
+        {
+            for (int j = 0; j < 120; j++)
+            {
+                Point p = new Point(j, i, 80);
+                points.Add(p);
+            }
+        }
+        int r = 15;
+        for (int i = -r; i <= r; i++)
+        {
+            for (int j = -r; j <= r; j++)
+            {
+                int dist = (int)Math.Sqrt(Math.Pow(j, 2) + Math.Pow(i * 2, 2));
+                if (dist < r)
+                {
+                    Point p = new Point(60 + j, 15 + i, 50 - r + dist);
+                    points.Add(p);
+                }
+
+            }
+        }
+        float k = 1; //коэф
+        float step = 0.1f;
+        float maxDistance = 100;
+        HashSet<string> pointSet = new HashSet<string>();
+        foreach (var p in points)
+        {
+            pointSet.Add($"{p.x}_{p.y}_{p.z}");
+        }
+
+        for (float theta = 0; theta < 360; theta += step) // Угол в горизонтальной плоскости
+        {
+            for (float phi = 0; phi < 180; phi += step) // Угол в вертикальной плоскости
+            {
+                float dirX = (float)(Math.Sin(Math.PI * phi / 180) * Math.Cos(Math.PI * theta / 180));
+                float dirY = (float)(Math.Sin(Math.PI * phi / 360) * Math.Sin(Math.PI * theta / 180));
+                float dirZ = (float)Math.Cos(Math.PI * phi / 180);
+
+                for (float kdist = 0; kdist < maxDistance; kdist += 1.0f)
+                {
+                    float xlocation = start.x + kdist * dirX;
+                    float ylocation = start.y + kdist * dirY;
+                    float zlocation = start.z + kdist * dirZ;
+
+                    string key = $"{Math.Round(xlocation)}_{Math.Round(ylocation)}_{Math.Round(zlocation)}";
+                    if (pointSet.Contains(key))
+                    {
+                        Console.SetCursorPosition((int)Math.Round(xlocation), (int)Math.Round(ylocation));
+                        float dist = kdist;
+                        int index = Math.Clamp((int)(2 * dist / chars.Count), 0, chars.Count - 1);
+                            Console.Write(chars[index]);
+                        break;
+                    }
+                }
+            }
+        }
+        Console.ReadKey();
+    }
+}
+
